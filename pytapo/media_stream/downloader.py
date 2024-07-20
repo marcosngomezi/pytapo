@@ -70,18 +70,21 @@ class Downloader:
         while downloading:
             # todo: add a way to not download recent videos to prevent videos in progress
             dateStart = datetime.utcfromtimestamp(int(self.startTime)).strftime(
-                "%Y-%m-%d %H_%M_%S"
+                "%Y-%m-%d-%H_%M_%S"
             )
             dateEnd = datetime.utcfromtimestamp(int(self.endTime)).strftime(
-                "%Y-%m-%d %H_%M_%S"
+                "%Y-%m-%d-%H_%M_%S"
             )
             segmentLength = self.endTime - self.startTime
             if self.fileName is None:
+                print("if")
                 fileName = (
                     self.outputDirectory + str(dateStart) + "-" + dateEnd + ".mp4"
                 )
             else:
+                print("else")
                 fileName = self.outputDirectory + self.fileName
+            print(fileName)
             if (
                 datetime.now().timestamp()
                 - self.FRESH_RECORDING_TIME_SECONDS
@@ -106,6 +109,7 @@ class Downloader:
                 }
                 downloading = False
             else:
+                print("uno")
                 convert = Convert()
                 mediaSession = self.tapo.getMediaSession()
                 if retry:
@@ -123,7 +127,7 @@ class Downloader:
                                 "scale": "1/1",
                                 "start_time": str(self.startTime),
                                 "end_time": str(self.endTime),
-                                "event_type": [1, 2],
+                                "event_type": [1, 2, 6],
                             },
                             "method": "get",
                         },

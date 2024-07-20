@@ -101,7 +101,9 @@ class HttpMediaSession:
             res_line, headers_block = data.split(b"\r\n", 1)
             _, status_code, _ = parse_http_response(res_line)
             res_headers = parse_http_headers(headers_block)
-
+            print("")
+            print(res_line)
+            print(res_headers)
             self._auth_data = {
                 i[0].strip().replace('"', ""): i[1].strip().replace('"', "")
                 for i in (
@@ -109,6 +111,7 @@ class HttpMediaSession:
                     for j in res_headers["WWW-Authenticate"].split(" ", 1)[1].split(",")
                 )
             }
+            print(self._auth_data)
             self._auth_data.update(
                 {
                     "username": self.username,
@@ -117,14 +120,14 @@ class HttpMediaSession:
                     "qop": "auth",
                 }
             )
-
+            print(self._auth_data)
             challenge1 = hashlib.md5(
                 ":".join(
                     (self.username, self._auth_data["realm"], self.hashed_password)
                 ).encode()
             ).hexdigest()
             challenge2 = hashlib.md5(b"POST:/stream").hexdigest()
-
+            
             self._auth_data["response"] = hashlib.md5(
                 b":".join(
                     (
@@ -147,21 +150,26 @@ class HttpMediaSession:
                 ).encode()
             )
             headers[b"Authorization"] = self._authorization
-
+            if "Set-Cookie" in res_headers:
+                headers[b"Cookie"] = (res_headers["Set-Cookie"]).encode()
             logger.debug("Authentication data retrieved")
-
+            print("")
+            print(req_line)
+            print(headers)
             # Step two: start actual communication
             await self._send_http_request(req_line, headers)
 
             # Ensure the request was successful
             data = await self._reader.readuntil(b"\r\n\r\n")
             res_line, headers_block = data.split(b"\r\n", 1)
-            _, status_code, _ = parse_http_response(res_line)
-            if status_code != 200:
-                raise HttpStatusCodeException(status_code)
-
+           # _, status_code, _ = parse_http_response(res_line)
+            #if status_code != 200:
+            #    raise HttpStatusCodeException(status_code)
             # Parse important HTTP headers
             res_headers = parse_http_headers(headers_block)
+            print("")
+            print(res_line)
+            print(res_headers)
             if "Key-Exchange" not in res_headers:
                 raise KeyExchangeMissingException
 
@@ -183,7 +191,7 @@ class HttpMediaSession:
                 )
             else:
                 self._device_boundary = boundary
-
+            print(self._device_boundary)
             # Prepare for AES decryption of content
             self._key_exchange = res_headers["Key-Exchange"]
             self._aes = AESHelper.from_keyexchange_and_password(
@@ -234,11 +242,12 @@ class HttpMediaSession:
             # what's before and the boundary goes to the trash
             await self._reader.readuntil(self._device_boundary)
 
-            logger.debug("Handling new server response")
+            print("Handling new server response")
 
             # Read and parse headers
             headers_block = await self._reader.readuntil(b"\r\n\r\n")
             headers = parse_http_headers(headers_block)
+            print(headers)
             mimetype = headers["Content-Type"]
             length = int(headers["Content-Length"])
             encrypted = bool(int(headers["X-If-Encrypt"]))

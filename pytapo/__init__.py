@@ -1195,6 +1195,7 @@ class Tapo:
                     },
                 }
             )["result"]["responses"][0]["result"]
+            print(response)
             if "error_code" not in response or response["error_code"] == 0:
                 self.userID = response["user_id"]
             else:
@@ -1222,6 +1223,37 @@ class Tapo:
         if "playback" not in result:
             raise Exception("Video playback is not supported by this camera")
         return result["playback"]["search_results"]
+
+    def getRecordings2(self, date, start_index=0, end_index=99):
+        startTime = datetime.timestamp(datetime.strptime(date, '%Y%m%d'))
+        endTime = startTime+24*60*60-1
+        print(startTime)
+        print(endTime)
+        try:
+            result = self.executeFunction(
+                "searchVideoWithUTC",
+                {
+                    "playback": {
+                        "search_video_with_utc": {
+                            "channel": 0,
+                            "end_index": end_index,
+                            "id": self.getUserID(),
+                            "start_index": start_index,
+                            "end_time":int(endTime),
+                            "start_time":int(startTime),
+                        }
+                    }
+                },
+            )
+            if "playback" not in result:
+                raise Exception("Video playback is not supported by this camera")
+            return result["playback"]["search_video_results"]
+        except Exception as err:
+            print(err)
+            # user ID expired, get a new one
+            if ERROR_CODES["-71103"] in str(err):
+                self.getUserID(True)
+                return self.getRecordings2(date, start_index, end_index)
 
     def getRecordings(self, date, start_index=0, end_index=999999999):
         try:
