@@ -715,6 +715,18 @@ class Tapo:
                 events.append(event)
         return events
 
+    def getVideoQualities(self):
+        return self.executeFunction(
+            "getVideoQualities",
+            {"video": {"name": ["main"]}},
+        )
+
+    def getVideoCapability(self):
+        return self.executeFunction(
+            "getVideoCapability",
+            {"video_capability": {"name": "main"}},
+        )
+
     # returns empty response for child devices
     def getOsd(self):
         # no, asking for all does not work...
@@ -853,6 +865,12 @@ class Tapo:
     def setHubSirenStatus(self, status):
         return self.executeFunction(
             "setSirenStatus", {"siren": {"status": "on" if status else "off"}}
+        )
+
+    def setHDR(self, status):
+        return self.executeFunction(
+            "setHDR",
+            {"video": {"set_hdr": {"hdr": 1 if status else 0, "secname": "main"}}},
         )
 
     def getHubSirenStatus(self):
@@ -1863,6 +1881,14 @@ class Tapo:
                             "auto_upgrade": {"name": ["common"]},
                         },
                     },
+                    {
+                        "method": "getVideoQualities",
+                        "params": {"video": {"name": ["main"]}},
+                    },
+                    {
+                        "method": "getVideoCapability",
+                        "params": {"video_capability": {"name": "main"}},
+                    },
                 ]
             },
         }
@@ -1923,10 +1949,6 @@ class Tapo:
                     raise Exception(
                         f"Method {result['method']} has been returned more times than expected. Response: {results}"
                     )
-
-        for method in returnData:
-            print(method)
-            print(returnData[method])
 
         if len(returnData["getPresetConfig"]) == 1:
             if returnData["getPresetConfig"][0]:
