@@ -92,7 +92,7 @@ class HttpMediaSession:
             self._reader, self._writer = await asyncio.open_connection(
                 self.ip, self.port
             )
-            logger.info("Connected to the media streaming server")
+            logger.info("Connected to the edia streaming server")
 
             # Step one: perform unauthenticated request
             await self._send_http_request(req_line, headers)
@@ -102,8 +102,8 @@ class HttpMediaSession:
             _, status_code, _ = parse_http_response(res_line)
             res_headers = parse_http_headers(headers_block)
             print("")
-            logger.debug(res_line)
-            logger.debug(res_headers)
+            logger.info(res_line)
+            logger.info(res_headers)
             self._auth_data = {
                 i[0].strip().replace('"', ""): i[1].strip().replace('"', "")
                 for i in (
@@ -111,7 +111,7 @@ class HttpMediaSession:
                     for j in res_headers["WWW-Authenticate"].split(" ", 1)[1].split(",")
                 )
             }
-            logger.debug(self._auth_data)
+            logger.info(self._auth_data)
             self._auth_data.update(
                 {
                     "username": self.username,
